@@ -6,10 +6,14 @@ class AppTheme {
   AppTheme._();
 
   // Main Colors - Updated to match website
-  static const Color primaryDarkBlue = Color(0xFF0A1929);  // Dark navy background
-  static const Color secondaryDarkBlue = Color(0xFF162840); // Slightly lighter navy for cards
-  static const Color accentTeal = Color(0xFF26D0CE); // Bright teal for accents/buttons
-  static const Color lightTeal = Color(0xFF4FD1C5); // Lighter teal for secondary elements
+  static const Color primaryDarkBlue =
+      Color(0xFF0A1929); // Dark navy background
+  static const Color secondaryDarkBlue =
+      Color(0xFF162840); // Slightly lighter navy for cards
+  static const Color accentTeal =
+      Color(0xFF26D0CE); // Bright teal for accents/buttons
+  static const Color lightTeal =
+      Color(0xFF4FD1C5); // Lighter teal for secondary elements
   static const Color white = Colors.white;
   static const Color errorColor = Color(0xFFE53935);
   static const Color successColor = Color(0xFF43A047);
@@ -35,7 +39,7 @@ class AppTheme {
       backgroundColor: white,
       foregroundColor: primaryDarkBlue,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -104,7 +108,8 @@ class AppTheme {
       error: errorColor,
       onError: Colors.white,
     ),
-    textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
+    textTheme:
+        GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
       displayLarge: GoogleFonts.poppins(
         textStyle: const TextStyle(
           color: Colors.white,
@@ -152,7 +157,7 @@ class AppTheme {
       backgroundColor: primaryDarkBlue,
       foregroundColor: white,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       color: secondaryDarkBlue,
       shape: RoundedRectangleBorder(
@@ -240,12 +245,12 @@ class AppTheme {
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: accentTeal,
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: accentTeal,
       unselectedLabelColor: Colors.grey.shade400,
       indicatorColor: accentTeal,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: secondaryDarkBlue,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -253,4 +258,3 @@ class AppTheme {
     ),
   );
 }
-// Minor change for contribution
