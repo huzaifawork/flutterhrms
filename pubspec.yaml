@@ -52,12 +52,16 @@ dependencies:
   # QR Code
   qr_flutter: ^4.1.0
 
+  # Material Design Icons (Recommended with Material 3)
+  material_design_icons_flutter: ^7.0.7296
+
   # Utilities
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^3.0.0
 
 flutter:
@@ -66,12 +70,9 @@ flutter:
   assets:
     - assets/images/
 
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: fonts/Poppins-Regular.ttf
-  #       - asset: fonts/Poppins-Bold.ttf
-  #         weight: 700
-
-
-
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+        - asset: fonts/Poppins-Bold.ttf
+          weight: 700
