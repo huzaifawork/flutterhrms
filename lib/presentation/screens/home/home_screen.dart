@@ -507,43 +507,103 @@ class _HomeContentState extends State<HomeContent> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildQuickAction(
-                        context,
-                        'Book Room',
-                        Icons.hotel,
-                        theme.colorScheme.secondary,
-                        () {
-                          final homeScreenState = context
-                              .findAncestorStateOfType<_HomeScreenState>();
-                          homeScreenState?.updateSelectedIndex(1);
-                        },
-                      ),
-                      _buildQuickAction(
-                        context,
-                        'Reserve Table',
-                        Icons.table_bar,
-                        theme.colorScheme.primary,
-                        () {
-                          final homeScreenState = context
-                              .findAncestorStateOfType<_HomeScreenState>();
-                          homeScreenState?.updateSelectedIndex(2);
-                        },
-                      ),
-                      _buildQuickAction(
-                        context,
-                        'Order Food',
-                        Icons.restaurant_menu,
-                        theme.colorScheme.tertiary,
-                        () {
-                          final homeScreenState = context
-                              .findAncestorStateOfType<_HomeScreenState>();
-                          homeScreenState?.updateSelectedIndex(3);
-                        },
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Responsive layout for quick actions
+                      if (constraints.maxWidth < 400) {
+                        // Very small screens: Stack vertically
+                        return Column(
+                          children: [
+                            _buildQuickAction(
+                              context,
+                              'Book Room',
+                              Icons.hotel,
+                              theme.colorScheme.secondary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(1);
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            _buildQuickAction(
+                              context,
+                              'Reserve Table',
+                              Icons.table_bar,
+                              theme.colorScheme.primary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(2);
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            _buildQuickAction(
+                              context,
+                              'Order Food',
+                              Icons.restaurant_menu,
+                              theme.colorScheme.tertiary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(3);
+                              },
+                            ),
+                          ],
+                        );
+                      } else {
+                        // Normal screens: Horizontal layout
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                                child: _buildQuickAction(
+                              context,
+                              'Book Room',
+                              Icons.hotel,
+                              theme.colorScheme.secondary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(1);
+                              },
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(
+                                child: _buildQuickAction(
+                              context,
+                              'Reserve Table',
+                              Icons.table_bar,
+                              theme.colorScheme.primary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(2);
+                              },
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(
+                                child: _buildQuickAction(
+                              context,
+                              'Order Food',
+                              Icons.restaurant_menu,
+                              theme.colorScheme.tertiary,
+                              () {
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
+                                homeScreenState?.updateSelectedIndex(3);
+                              },
+                            )),
+                          ],
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -825,54 +885,63 @@ class _HomeContentState extends State<HomeContent> {
     Color color,
     VoidCallback onTap,
   ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 80,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color,
-                    color.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing
+        final isSmall = constraints.maxWidth < 100;
+        final iconSize = isSmall ? 20.0 : 28.0;
+        final fontSize = isSmall ? 10.0 : 12.0;
+        // final padding = isSmall ? 12.0 : 16.0;
+
+        return InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        color,
+                        color.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 28,
-              ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: iconSize,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

@@ -695,21 +695,38 @@ class _TableReservationPageState extends State<TableReservationPage>
                         )
                       : Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                            itemCount: _recommendedTables.length,
-                            itemBuilder: (context, index) {
-                              final table = _recommendedTables[index];
-                              return _buildModernTableCard(table,
-                                  isRecommended: true);
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Responsive grid based on screen width
+                              int crossAxisCount = 2;
+                              double childAspectRatio = 0.75;
+
+                              if (constraints.maxWidth > 600) {
+                                crossAxisCount = 3;
+                                childAspectRatio = 0.8;
+                              }
+                              if (constraints.maxWidth > 900) {
+                                crossAxisCount = 4;
+                                childAspectRatio = 0.85;
+                              }
+
+                              return GridView.builder(
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  childAspectRatio: childAspectRatio,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                ),
+                                itemCount: _recommendedTables.length,
+                                itemBuilder: (context, index) {
+                                  final table = _recommendedTables[index];
+                                  return _buildModernTableCard(table,
+                                      isRecommended: true);
+                                },
+                              );
                             },
                           ),
                         ),
@@ -1031,20 +1048,37 @@ class _TableReservationPageState extends State<TableReservationPage>
                 )
               : Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.8,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: _allTables.length,
-                    itemBuilder: (context, index) {
-                      final table = _allTables[index];
-                      return _buildModernTableCard(table, isRecommended: false);
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Responsive grid based on screen width
+                      int crossAxisCount = 2;
+                      double childAspectRatio = 0.8;
+
+                      if (constraints.maxWidth > 600) {
+                        crossAxisCount = 3;
+                        childAspectRatio = 0.85;
+                      }
+                      if (constraints.maxWidth > 900) {
+                        crossAxisCount = 4;
+                        childAspectRatio = 0.9;
+                      }
+
+                      return GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: childAspectRatio,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: _allTables.length,
+                        itemBuilder: (context, index) {
+                          final table = _allTables[index];
+                          return _buildModernTableCard(table,
+                              isRecommended: false);
+                        },
+                      );
                     },
                   ),
                 ),
@@ -1058,324 +1092,336 @@ class _TableReservationPageState extends State<TableReservationPage>
     final status = table['status'] ?? 'Available';
     final isAvailable = status.toLowerCase() == 'available';
 
-    return GestureDetector(
-      onTap: () => _handleTableTap(table),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1E293B).withValues(alpha: 0.8),
-              const Color(0xFF0F172A).withValues(alpha: 0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isAvailable
-                ? const Color(0xFF64FFDA).withValues(alpha: 0.4)
-                : Colors.red.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
-                  .withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Modern Image Section
-            Expanded(
-              flex: 3,
-              child: Stack(
-                children: [
-                  // Table image with modern styling
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(20)),
-                      image: DecorationImage(
-                        image: NetworkImage(imageUrl),
-                        fit: BoxFit.cover,
-                        onError: (exception, stackTrace) {
-                          // Handle image loading error
-                        },
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20)),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.6),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing
+        final cardWidth = constraints.maxWidth;
+        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
+        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
+        // final padding = cardWidth < 150 ? 6.0 : 8.0;
+        // final buttonHeight = cardWidth < 150 ? 28.0 : 32.0;
 
-                  // Modern Recommendation badge with proper type
-                  if (isRecommended)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: _getRecommendationBadge(
-                          table['recommendationReason']),
-                    ),
-
-                  // Modern Status badge
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isAvailable
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFFEF4444),
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isAvailable
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFFEF4444))
-                                .withValues(alpha: 0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        status,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Modern Favorite button
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: GestureDetector(
-                      onTap: () => _handleTableFavorite(table),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.favorite_border,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ),
+        return GestureDetector(
+          onTap: () => _handleTableTap(table),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1E293B).withValues(alpha: 0.8),
+                  const Color(0xFF0F172A).withValues(alpha: 0.9),
                 ],
               ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isAvailable
+                    ? const Color(0xFF64FFDA).withValues(alpha: 0.4)
+                    : Colors.red.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
+                      .withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-
-            // Modern Table details
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Table name with modern styling
-                    Text(
-                      table['tableName'] ?? 'Unknown Table',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // Location and capacity with modern icons
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF64FFDA).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.location_on_outlined,
-                            color: Color(0xFF64FFDA),
-                            size: 12,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Modern Image Section
+                Expanded(
+                  flex: 3,
+                  child: Stack(
+                    children: [
+                      // Table image with modern styling
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20)),
+                          image: DecorationImage(
+                            image: NetworkImage(imageUrl),
+                            fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {
+                              // Handle image loading error
+                            },
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            table['location'] ?? 'Main Hall',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(20)),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.6),
+                              ],
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Container(
+                      ),
+
+                      // Modern Recommendation badge with proper type
+                      if (isRecommended)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          child: _getRecommendationBadge(
+                              table['recommendationReason']),
+                        ),
+
+                      // Modern Status badge
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF64FFDA).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: isAvailable
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isAvailable
+                                        ? const Color(0xFF10B981)
+                                        : const Color(0xFFEF4444))
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Text(
-                            '${table['capacity'] ?? 2} seats',
+                            status,
                             style: const TextStyle(
-                              color: Color(0xFF64FFDA),
-                              fontSize: 10,
+                              color: Colors.white,
+                              fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
 
-                    const SizedBox(height: 6),
-
-                    // Rating with modern design
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                      // Modern Favorite button
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: GestureDetector(
+                          onTap: () => _handleTableFavorite(table),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.favorite_border,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                color: Colors.amber,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Modern Table details
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Table name with modern styling
+                        Text(
+                          table['tableName'] ?? 'Unknown Table',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleFontSize,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        // Location and capacity with modern icons
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF64FFDA)
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.location_on_outlined,
+                                color: Color(0xFF64FFDA),
                                 size: 12,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                rating.toStringAsFixed(1),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                table['location'] ?? 'Main Hall',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF64FFDA)
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${table['capacity'] ?? 2} seats',
                                 style: const TextStyle(
-                                  color: Colors.amber,
+                                  color: Color(0xFF64FFDA),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        // Rating with modern design
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rating.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      color: Colors.amber,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+                            // Reserve button
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF64FFDA),
+                                    Color(0xFF4FD1C7)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF64FFDA)
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'Reserve',
+                                style: TextStyle(
+                                  color: Color(0xFF0F172A),
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
-                        // Reserve button
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF64FFDA), Color(0xFF4FD1C7)],
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                          ],
+                        ),
+
+                        // Recommendation explanation (only for recommended tables)
+                        if (isRecommended && table['explanation'] != null)
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF64FFDA)
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFF64FFDA)
+                                        .withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  table['explanation'],
+                                  style: TextStyle(
+                                    color: const Color(0xFF64FFDA)
+                                        .withValues(alpha: 0.9),
+                                    fontSize: 9,
+                                    fontStyle: FontStyle.italic,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Text(
-                            'Reserve',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
                       ],
                     ),
-
-                    // Recommendation explanation (only for recommended tables)
-                    if (isRecommended && table['explanation'] != null)
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF64FFDA)
-                                  .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Text(
-                              table['explanation'],
-                              style: TextStyle(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.9),
-                                fontSize: 9,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
-
-

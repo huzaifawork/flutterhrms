@@ -305,65 +305,99 @@ class _FeaturedTablesSectionState extends State<FeaturedTablesSection> {
   Widget _buildTablesGrid() {
     return Column(
       children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.7,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount:
-              _tables.length > 3 ? 3 : _tables.length, // Limit to 3 tables
-          itemBuilder: (context, index) {
-            final table = _tables[index];
-            return _buildTableCard(table);
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive grid based on screen width
+            int crossAxisCount = 2;
+            double childAspectRatio = 0.7;
+
+            if (constraints.maxWidth > 600) {
+              crossAxisCount = 3;
+              childAspectRatio = 0.8;
+            }
+            if (constraints.maxWidth > 900) {
+              crossAxisCount = 4;
+              childAspectRatio = 0.85;
+            }
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: childAspectRatio,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount:
+                  _tables.length > 3 ? 3 : _tables.length, // Limit to 3 tables
+              itemBuilder: (context, index) {
+                final table = _tables[index];
+                return _buildTableCard(table);
+              },
+            );
           },
         ),
 
         // View All Button
         const SizedBox(height: 32),
-        Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: ElevatedButton(
-            onPressed: () {
-              // Navigate to Tables page and ensure it opens on the Recommendations tab
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TableReservationPage(),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFBB86FC),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 8,
-              shadowColor: const Color(0xFFBB86FC).withValues(alpha: 0.4),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.psychology, size: 20),
-                SizedBox(width: 12),
-                Text(
-                  'View All Recommended Tables',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive button sizing
+            final isSmall = constraints.maxWidth < 400;
+            final fontSize = isSmall ? 14.0 : 16.0;
+            final iconSize = isSmall ? 18.0 : 20.0;
+            final padding = isSmall
+                ? const EdgeInsets.symmetric(vertical: 12, horizontal: 16)
+                : const EdgeInsets.symmetric(vertical: 16, horizontal: 32);
+
+            return Container(
+              width: double.infinity,
+              constraints: BoxConstraints(maxWidth: isSmall ? 300 : 400),
+              child: ElevatedButton(
+                onPressed: () {
+                  // Navigate to Tables page and ensure it opens on the Recommendations tab
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TableReservationPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFBB86FC),
+                  foregroundColor: Colors.white,
+                  padding: padding,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 8,
+                  shadowColor: const Color(0xFFBB86FC).withValues(alpha: 0.4),
                 ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 16),
-              ],
-            ),
-          ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.psychology, size: iconSize),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'View All Recommended Tables',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.arrow_forward, size: iconSize - 2),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -372,265 +406,285 @@ class _FeaturedTablesSectionState extends State<FeaturedTablesSection> {
   Widget _buildTableCard(Map<String, dynamic> table) {
     final isHovered = _hoveredTable == table['_id'];
 
-    return GestureDetector(
-      onTap: () {
-        // Navigate to table reservation
-        Navigator.pushNamed(context, '/reserve-table', arguments: table);
-      },
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hoveredTable = table['_id']),
-        onExit: (_) => setState(() => _hoveredTable = null),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isHovered
-                  ? [
-                      const Color(0xFFBB86FC).withOpacity(0.08),
-                      const Color(0xFFFF6B9D).withOpacity(0.04),
-                    ]
-                  : [
-                      Colors.white.withOpacity(0.08),
-                      Colors.white.withOpacity(0.02),
-                    ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isHovered
-                  ? const Color(0xFFBB86FC).withOpacity(0.5)
-                  : Colors.white.withOpacity(0.15),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isHovered ? 0.3 : 0.2),
-                blurRadius: isHovered ? 10 : 4,
-                offset: Offset(0, isHovered ? 5 : 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing based on available width
+        final cardWidth = constraints.maxWidth;
+        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
+        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
+        final padding = cardWidth < 150 ? 6.0 : 8.0;
+        // final iconSize = cardWidth < 150 ? 14.0 : 16.0;
+
+        return GestureDetector(
+          onTap: () {
+            // Navigate to table reservation
+            Navigator.pushNamed(context, '/reserve-table', arguments: table);
+          },
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hoveredTable = table['_id']),
+            onExit: (_) => setState(() => _hoveredTable = null),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isHovered
+                      ? [
+                          const Color(0xFFBB86FC).withOpacity(0.08),
+                          const Color(0xFFFF6B9D).withOpacity(0.04),
+                        ]
+                      : [
+                          Colors.white.withOpacity(0.08),
+                          Colors.white.withOpacity(0.02),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isHovered
+                      ? const Color(0xFFBB86FC).withOpacity(0.5)
+                      : Colors.white.withOpacity(0.15),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isHovered ? 0.3 : 0.2),
+                    blurRadius: isHovered ? 10 : 4,
+                    offset: Offset(0, isHovered ? 5 : 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          transform: Matrix4.identity()..translate(0.0, isHovered ? -5.0 : 0.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Column(
-              children: [
-                // Image Section
-                Expanded(
-                  flex: 2,
-                  child: Stack(
-                    children: [
-                      // Table Image
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(_getImageUrl(table['image'])),
-                            fit: BoxFit.cover,
-                            onError: (error, stackTrace) {
-                              print('Error loading table image: $error');
-                            },
-                          ),
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.4),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Recommendation Badge
-                      if (table['recommendationReason'] != null)
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: _getRecommendationBadge(
-                              table['recommendationReason']),
-                        ),
-
-                      // Status Badge
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF64FFDA), Color(0xFFBB86FC)],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF64FFDA).withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+              transform: Matrix4.identity()
+                ..translate(0.0, isHovered ? -5.0 : 0.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Column(
+                  children: [
+                    // Image Section
+                    Expanded(
+                      flex: 2,
+                      child: Stack(
+                        children: [
+                          // Table Image
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image:
+                                    NetworkImage(_getImageUrl(table['image'])),
+                                fit: BoxFit.cover,
+                                onError: (error, stackTrace) {
+                                  print('Error loading table image: $error');
+                                },
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            table['status'] ?? 'Available',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                        ),
-                      ),
-
-                      // Rating Badge
-                      Positioned(
-                        bottom: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.amber.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                size: 10,
-                                color: Colors.amber,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.4),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 2),
-                              Text(
-                                (table['avgRating'] ?? 4.5).toStringAsFixed(1),
+                            ),
+                          ),
+
+                          // Recommendation Badge
+                          if (table['recommendationReason'] != null)
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: _getRecommendationBadge(
+                                  table['recommendationReason']),
+                            ),
+
+                          // Status Badge
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF64FFDA),
+                                    Color(0xFFBB86FC)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF64FFDA)
+                                        .withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                table['status'] ?? 'Available',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   fontSize: 8,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+
+                          // Rating Badge
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.amber.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 10,
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    (table['avgRating'] ?? 4.5)
+                                        .toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                // Content Section
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Table Title
-                        Text(
-                          table['tableName'] ?? 'Premium Table',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            foreground: Paint()
-                              ..shader = const LinearGradient(
-                                colors: [Colors.white, Color(0xFFBB86FC)],
-                              ).createShader(
-                                  const Rect.fromLTWH(0, 0, 200, 70)),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Table Type
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFFBB86FC).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFFBB86FC)
-                                  .withValues(alpha: 0.2),
-                            ),
-                          ),
-                          child: Text(
-                            table['tableType'] ?? 'Premium',
-                            style: const TextStyle(
-                              color: Color(0xFFBB86FC),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Features
-                        Row(
+                    // Content Section
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: EdgeInsets.all(padding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildFeatureIcon(
-                                Icons.people, '${table['capacity']} Seats'),
-                            const SizedBox(width: 4),
-                            _buildFeatureIcon(Icons.location_on,
-                                table['location'] ?? 'Premium'),
-                            const SizedBox(width: 4),
-                            _buildFeatureIcon(Icons.access_time, 'Cozy'),
+                            // Table Title
+                            Text(
+                              table['tableName'] ?? 'Premium Table',
+                              style: TextStyle(
+                                fontSize: titleFontSize,
+                                fontWeight: FontWeight.w700,
+                                foreground: Paint()
+                                  ..shader = const LinearGradient(
+                                    colors: [Colors.white, Color(0xFFBB86FC)],
+                                  ).createShader(
+                                      const Rect.fromLTWH(0, 0, 200, 70)),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+
+                            // Table Type
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFBB86FC)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFFBB86FC)
+                                      .withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Text(
+                                table['tableType'] ?? 'Premium',
+                                style: TextStyle(
+                                  color: const Color(0xFFBB86FC),
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Features
+                            Row(
+                              children: [
+                                _buildFeatureIcon(
+                                    Icons.people, '${table['capacity']} Seats'),
+                                const SizedBox(width: 4),
+                                _buildFeatureIcon(Icons.location_on,
+                                    table['location'] ?? 'Premium'),
+                                const SizedBox(width: 4),
+                                _buildFeatureIcon(Icons.access_time, 'Cozy'),
+                              ],
+                            ),
+                            const Spacer(),
+
+                            // Reserve Button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 32,
+                              child: ElevatedButton(
+                                onPressed: table['status'] == 'Available'
+                                    ? () {
+                                        Navigator.pushNamed(
+                                            context, '/reserve-table',
+                                            arguments: table);
+                                      }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      table['status'] == 'Available'
+                                          ? const Color(0xFFBB86FC)
+                                          : Colors.grey,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  table['status'] == 'Available'
+                                      ? 'RESERVE'
+                                      : 'UNAVAILABLE',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: fontSize,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        const Spacer(),
-
-                        // Reserve Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 32,
-                          child: ElevatedButton(
-                            onPressed: table['status'] == 'Available'
-                                ? () {
-                                    Navigator.pushNamed(
-                                        context, '/reserve-table',
-                                        arguments: table);
-                                  }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: table['status'] == 'Available'
-                                  ? const Color(0xFFBB86FC)
-                                  : Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              table['status'] == 'Available'
-                                  ? 'RESERVE'
-                                  : 'UNAVAILABLE',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -659,4 +713,3 @@ class _FeaturedTablesSectionState extends State<FeaturedTablesSection> {
     );
   }
 }
-

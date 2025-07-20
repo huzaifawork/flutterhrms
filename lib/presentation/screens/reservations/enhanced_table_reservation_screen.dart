@@ -227,8 +227,8 @@ class _EnhancedTableReservationScreenState
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? '${Environmen{.currenEAniUro}AniUro}ApiUrl}/$cleanPath'
-        : '${Environmen{.currenEAniUrn}AniUrn}ApiUrl}/uploads/$cleanPath';
+        ? '${Environment.currentApiUrl}/$cleanPath'
+        : '${Environment.currentApiUrl}/uploads/$cleanPath';
   }
 
   Widget _getRecommendationBadge(String? reason) {

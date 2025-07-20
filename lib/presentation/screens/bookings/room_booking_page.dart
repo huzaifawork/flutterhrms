@@ -910,17 +910,34 @@ class _RoomBookingPageState extends State<RoomBookingPage>
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: rooms.length,
-        itemBuilder: (context, index) {
-          final room = rooms[index];
-          return _buildRoomCard(room, isRecommended: isRecommended);
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Responsive grid based on screen width
+          int crossAxisCount = 2;
+          double childAspectRatio = 0.7;
+
+          if (constraints.maxWidth > 600) {
+            crossAxisCount = 3;
+            childAspectRatio = 0.75;
+          }
+          if (constraints.maxWidth > 900) {
+            crossAxisCount = 4;
+            childAspectRatio = 0.8;
+          }
+
+          return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: childAspectRatio,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: rooms.length,
+            itemBuilder: (context, index) {
+              final room = rooms[index];
+              return _buildRoomCard(room, isRecommended: isRecommended);
+            },
+          );
         },
       ),
     );
@@ -934,262 +951,268 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     final isAvailable = status.toLowerCase() == 'available';
     final pricePerHour = (room['pricePerHour'] ?? 0).toDouble();
 
-    return GestureDetector(
-      onTap: () => _handleRoomTap(room),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.1),
-              Colors.white.withValues(alpha: 0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isAvailable
-                ? const Color(0xFF64FFDA).withValues(alpha: 0.3)
-                : Colors.red.withValues(alpha: 0.3),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
-                  .withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image and badges
-            Expanded(
-              flex: 3,
-              child: Stack(
-                children: [
-                  // Room image
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(16)),
-                      image: DecorationImage(
-                        image: NetworkImage(imageUrl),
-                        fit: BoxFit.cover,
-                        onError: (exception, stackTrace) {
-                          // Handle image loading error
-                        },
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16)),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.3),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing
+        final cardWidth = constraints.maxWidth;
+        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
+        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
+        // final padding = cardWidth < 150 ? 6.0 : 8.0;
+        // final buttonHeight = cardWidth < 150 ? 28.0 : 32.0;
 
-                  // Recommendation badge (only for recommended rooms)
-                  if (isRecommended)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child:
-                          _getRecommendationBadge(room['recommendationReason']),
-                    ),
-
-                  // Status badge
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isAvailable ? Colors.green : Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        status,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Favorite button
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: () => _handleRoomFavorite(room),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.favorite_border,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ),
+        return GestureDetector(
+          onTap: () => _handleRoomTap(room),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withValues(alpha: 0.05),
                 ],
               ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isAvailable
+                    ? const Color(0xFF64FFDA).withValues(alpha: 0.3)
+                    : Colors.red.withValues(alpha: 0.3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
+                      .withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-
-            // Room details
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Room name
-                    Text(
-                      room['roomName'] ?? 'Unknown Room',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Capacity and price
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people,
-                          color: Colors.grey[400],
-                          size: 12,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${room['capacity'] ?? 2} people',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 10,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image and badges
+                Expanded(
+                  flex: 3,
+                  child: Stack(
+                    children: [
+                      // Room image
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16)),
+                          image: DecorationImage(
+                            image: NetworkImage(imageUrl),
+                            fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {
+                              // Handle image loading error
+                            },
                           ),
                         ),
-                        const Spacer(),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16)),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Recommendation badge (only for recommended rooms)
+                      if (isRecommended)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: _getRecommendationBadge(
+                              room['recommendationReason']),
+                        ),
+
+                      // Status badge
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isAvailable ? Colors.green : Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            status,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Favorite button
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => _handleRoomFavorite(room),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.favorite_border,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Room details
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Room name
                         Text(
-                          'Rs. ${pricePerHour.toStringAsFixed(0)}/hr',
-                          style: const TextStyle(
-                            color: Color(0xFF64FFDA),
-                            fontSize: 10,
+                          room['roomName'] ?? 'Unknown Room',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleFontSize,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Rating
-                    Row(
-                      children: [
-                        ...List.generate(5, (index) {
-                          return Icon(
-                            index < rating.floor()
-                                ? Icons.star
-                                : index < rating
-                                    ? Icons.star_half
-                                    : Icons.star_border,
-                            color: Colors.amber,
-                            size: 12,
-                          );
-                        }),
-                        const SizedBox(width: 4),
-                        Text(
-                          rating.toStringAsFixed(1),
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Amenities (show first 3)
-                    if (room['amenities'] != null &&
-                        room['amenities'].isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Wrap(
-                          spacing: 4,
-                          children: (room['amenities'] as List)
-                              .take(3)
-                              .map<Widget>((amenity) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                amenity.toString(),
-                                style: const TextStyle(
-                                  color: Color(0xFF64FFDA),
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                    // Recommendation explanation (only for recommended rooms)
-                    if (isRecommended && room['explanation'] != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          room['explanation'],
-                          style: TextStyle(
-                            color:
-                                const Color(0xFF64FFDA).withValues(alpha: 0.8),
-                            fontSize: 9,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                  ],
+
+                        const SizedBox(height: 4),
+
+                        // Capacity and price
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.people,
+                              color: Colors.grey[400],
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${room['capacity'] ?? 2} people',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: fontSize,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Rs. ${pricePerHour.toStringAsFixed(0)}/hr',
+                              style: TextStyle(
+                                color: const Color(0xFF64FFDA),
+                                fontSize: fontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Rating
+                        Row(
+                          children: [
+                            ...List.generate(5, (index) {
+                              return Icon(
+                                index < rating.floor()
+                                    ? Icons.star
+                                    : index < rating
+                                        ? Icons.star_half
+                                        : Icons.star_border,
+                                color: Colors.amber,
+                                size: 12,
+                              );
+                            }),
+                            const SizedBox(width: 4),
+                            Text(
+                              rating.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Amenities (show first 3)
+                        if (room['amenities'] != null &&
+                            room['amenities'].isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Wrap(
+                              spacing: 4,
+                              children: (room['amenities'] as List)
+                                  .take(3)
+                                  .map<Widget>((amenity) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF64FFDA)
+                                        .withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    amenity.toString(),
+                                    style: const TextStyle(
+                                      color: Color(0xFF64FFDA),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+
+                        // Recommendation explanation (only for recommended rooms)
+                        if (isRecommended && room['explanation'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              room['explanation'],
+                              style: TextStyle(
+                                color: const Color(0xFF64FFDA)
+                                    .withValues(alpha: 0.8),
+                                fontSize: 9,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
-
-
-
-
-

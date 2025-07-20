@@ -336,63 +336,98 @@ class _FeaturedRoomsSectionState extends State<FeaturedRoomsSection> {
   Widget _buildRoomsGrid() {
     return Column(
       children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.7,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: _rooms.length > 3 ? 3 : _rooms.length, // Limit to 3 rooms
-          itemBuilder: (context, index) {
-            final room = _rooms[index];
-            return _buildRoomCard(room);
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive grid based on screen width
+            int crossAxisCount = 2;
+            double childAspectRatio = 0.7;
+
+            if (constraints.maxWidth > 600) {
+              crossAxisCount = 3;
+              childAspectRatio = 0.8;
+            }
+            if (constraints.maxWidth > 900) {
+              crossAxisCount = 4;
+              childAspectRatio = 0.85;
+            }
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: childAspectRatio,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount:
+                  _rooms.length > 3 ? 3 : _rooms.length, // Limit to 3 rooms
+              itemBuilder: (context, index) {
+                final room = _rooms[index];
+                return _buildRoomCard(room);
+              },
+            );
           },
         ),
 
         // View All Recommended Rooms Button
         const SizedBox(height: 32),
-        Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const RoomBookingPage(),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF64FFDA),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 8,
-              shadowColor: const Color(0xFF64FFDA).withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.psychology, size: 20),
-                const SizedBox(width: 12),
-                const Text(
-                  'View All Recommended Rooms',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive button sizing
+            final isSmall = constraints.maxWidth < 400;
+            final fontSize = isSmall ? 14.0 : 16.0;
+            final iconSize = isSmall ? 18.0 : 20.0;
+            final padding = isSmall
+                ? const EdgeInsets.symmetric(vertical: 12, horizontal: 16)
+                : const EdgeInsets.symmetric(vertical: 16, horizontal: 32);
+
+            return Container(
+              width: double.infinity,
+              constraints: BoxConstraints(maxWidth: isSmall ? 300 : 400),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RoomBookingPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF64FFDA),
+                  foregroundColor: Colors.black,
+                  padding: padding,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 8,
+                  shadowColor: const Color(0xFF64FFDA).withOpacity(0.4),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward, size: 16),
-              ],
-            ),
-          ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.psychology, size: iconSize),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'View All Recommended Rooms',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.arrow_forward, size: iconSize - 2),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -401,270 +436,291 @@ class _FeaturedRoomsSectionState extends State<FeaturedRoomsSection> {
   Widget _buildRoomCard(Map<String, dynamic> room) {
     final isHovered = _hoveredRoom == room['_id'];
 
-    return GestureDetector(
-      onTap: () {
-        // Navigate to room booking
-        Navigator.pushNamed(context, '/room-booking', arguments: room);
-      },
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hoveredRoom = room['_id']),
-        onExit: (_) => setState(() => _hoveredRoom = null),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isHovered
-                  ? [
-                      const Color(0xFF64FFDA).withOpacity(0.12),
-                      const Color(0xFFBB86FC).withOpacity(0.08),
-                      const Color(0xFFFF6B9D).withOpacity(0.06),
-                    ]
-                  : [
-                      const Color(0xFF112240).withOpacity(0.8),
-                      const Color(0xFF1A2332).withOpacity(0.6),
-                    ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isHovered
-                  ? const Color(0xFF64FFDA).withOpacity(0.4)
-                  : Colors.white.withOpacity(0.1),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isHovered ? 0.4 : 0.3),
-                blurRadius: isHovered ? 20 : 8,
-                offset: Offset(0, isHovered ? 8 : 3),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing based on available width
+        final cardWidth = constraints.maxWidth;
+        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
+        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
+        final padding = cardWidth < 150 ? 6.0 : 8.0;
+        final iconSize = cardWidth < 150 ? 14.0 : 16.0;
+
+        return GestureDetector(
+          onTap: () {
+            // Navigate to room booking
+            Navigator.pushNamed(context, '/room-booking', arguments: room);
+          },
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hoveredRoom = room['_id']),
+            onExit: (_) => setState(() => _hoveredRoom = null),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isHovered
+                      ? [
+                          const Color(0xFF64FFDA).withOpacity(0.12),
+                          const Color(0xFFBB86FC).withOpacity(0.08),
+                          const Color(0xFFFF6B9D).withOpacity(0.06),
+                        ]
+                      : [
+                          const Color(0xFF112240).withOpacity(0.8),
+                          const Color(0xFF1A2332).withOpacity(0.6),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isHovered
+                      ? const Color(0xFF64FFDA).withOpacity(0.4)
+                      : Colors.white.withOpacity(0.1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isHovered ? 0.4 : 0.3),
+                    blurRadius: isHovered ? 20 : 8,
+                    offset: Offset(0, isHovered ? 8 : 3),
+                  ),
+                ],
               ),
-            ],
-          ),
-          transform: Matrix4.identity()
-            ..translate(0.0, isHovered ? -8.0 : 0.0)
-            ..scale(isHovered ? 1.02 : 1.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              children: [
-                // Image Section
-                Expanded(
-                  flex: 3,
-                  child: Stack(
-                    children: [
-                      // Room Image
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(_getImageUrl(room['image'])),
-                            fit: BoxFit.cover,
-                            onError: (error, stackTrace) {
-                              print('Error loading image: $error');
-                            },
-                          ),
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.4),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Recommendation Badge
-                      if (room['recommendationReason'] != null)
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: _getRecommendationBadge(
-                              room['recommendationReason']),
-                        ),
-
-                      // Price Badge
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF64FFDA), Color(0xFFBB86FC)],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF64FFDA).withOpacity(0.4),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
+              transform: Matrix4.identity()
+                ..translate(0.0, isHovered ? -8.0 : 0.0)
+                ..scale(isHovered ? 1.02 : 1.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Column(
+                  children: [
+                    // Image Section
+                    Expanded(
+                      flex: 3,
+                      child: Stack(
+                        children: [
+                          // Room Image
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image:
+                                    NetworkImage(_getImageUrl(room['image'])),
+                                fit: BoxFit.cover,
+                                onError: (error, stackTrace) {
+                                  print('Error loading image: $error');
+                                },
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            _formatPrice(room['price']),
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
                             ),
-                          ),
-                        ),
-                      ),
-
-                      // Rating Badge
-                      Positioned(
-                        bottom: 12,
-                        left: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.amber.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                size: 12,
-                                color: Colors.amber,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.4),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                (room['averageRating'] ?? 4.5)
-                                    .toStringAsFixed(1),
+                            ),
+                          ),
+
+                          // Recommendation Badge
+                          if (room['recommendationReason'] != null)
+                            Positioned(
+                              top: 12,
+                              left: 12,
+                              child: _getRecommendationBadge(
+                                  room['recommendationReason']),
+                            ),
+
+                          // Price Badge
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF64FFDA),
+                                    Color(0xFFBB86FC)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF64FFDA)
+                                        .withOpacity(0.4),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                _formatPrice(room['price']),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Rating Badge
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.amber.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 12,
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    (room['averageRating'] ?? 4.5)
+                                        .toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Content Section
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: EdgeInsets.all(padding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Room Title
+                            Text(
+                              room['roomNumber'] ?? 'Luxury Room',
+                              style: TextStyle(
+                                fontSize: titleFontSize,
+                                fontWeight: FontWeight.w800,
+                                foreground: Paint()
+                                  ..shader = const LinearGradient(
+                                    colors: [Colors.white, Color(0xFFBB86FC)],
+                                  ).createShader(
+                                      const Rect.fromLTWH(0, 0, 200, 70)),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+
+                            // Room Type
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFBB86FC)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFFBB86FC)
+                                      .withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Text(
+                                room['roomType'] ?? 'Deluxe',
+                                style: TextStyle(
+                                  color: const Color(0xFFBB86FC),
+                                  fontSize: fontSize,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content Section
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Room Title
-                        Text(
-                          room['roomNumber'] ?? 'Luxury Room',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            foreground: Paint()
-                              ..shader = const LinearGradient(
-                                colors: [Colors.white, Color(0xFFBB86FC)],
-                              ).createShader(
-                                  const Rect.fromLTWH(0, 0, 200, 70)),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Room Type
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFFBB86FC).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFFBB86FC)
-                                  .withValues(alpha: 0.2),
                             ),
-                          ),
-                          child: Text(
-                            room['roomType'] ?? 'Deluxe',
-                            style: const TextStyle(
-                              color: Color(0xFFBB86FC),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                            const SizedBox(height: 8),
 
-                        // Features
-                        Row(
-                          children: [
-                            _buildFeatureIcon(Icons.wifi, 'WiFi'),
-                            const SizedBox(width: 8),
-                            _buildFeatureIcon(Icons.coffee, 'Coffee'),
-                            const SizedBox(width: 8),
-                            _buildFeatureIcon(Icons.tv, 'TV'),
+                            // Features
+                            Row(
+                              children: [
+                                _buildFeatureIcon(Icons.wifi, 'WiFi',
+                                    iconSize: iconSize, fontSize: fontSize),
+                                const SizedBox(width: 8),
+                                _buildFeatureIcon(Icons.coffee, 'Coffee',
+                                    iconSize: iconSize, fontSize: fontSize),
+                                const SizedBox(width: 8),
+                                _buildFeatureIcon(Icons.tv, 'TV',
+                                    iconSize: iconSize, fontSize: fontSize),
+                              ],
+                            ),
+                            const Spacer(),
+
+                            // Book Button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 32,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/room-booking',
+                                      arguments: room);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  'BOOK NOW',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: fontSize,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        const Spacer(),
-
-                        // Book Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 32,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/room-booking',
-                                  arguments: room);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6366F1),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text(
-                              'BOOK NOW',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildFeatureIcon(IconData icon, String label) {
+  Widget _buildFeatureIcon(IconData icon, String label,
+      {double? iconSize, double? fontSize}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
-          size: 12,
+          size: iconSize ?? 12,
           color: Colors.white.withValues(alpha: 0.8),
         ),
         const SizedBox(width: 4),
@@ -672,12 +728,10 @@ class _FeaturedRoomsSectionState extends State<FeaturedRoomsSection> {
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.8),
-            fontSize: 8,
+            fontSize: fontSize ?? 8,
           ),
         ),
       ],
     );
   }
 }
-
-

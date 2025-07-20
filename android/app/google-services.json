@@ -7,7 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:940737064009:android:hrms_mobile_app",
+        "mobilesdk_app_id": "1:940737064009:android:a1b2c3d4e5f6g7h8",
         "android_client_info": {
           "package_name": "com.example.hrms_mobile_app"
         }
@@ -20,16 +20,25 @@
             "package_name": "com.example.hrms_mobile_app",
             "certificate_hash": "373e0236f1cd8e2056826e7955c298482f71ec82"
           }
+        },
+        {
+          "client_id": "940737064009-sf2stfd9kf6dq9e6s188l2pe1hh6q75o.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDummy_Key_For_Google_SignIn"
+          "current_key": "AIzaSyC1234567890abcdefghijklmnopqrstuvwxyz"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "940737064009-sf2stfd9kf6dq9e6s188l2pe1hh6q75o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
