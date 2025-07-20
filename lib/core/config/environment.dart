@@ -9,13 +9,13 @@ class Environment {
   // API Configuration
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8080', // Fallback for development
+    defaultValue: 'https://hrms-bace.vercel.app', // Updated to Vercel URL
   );
 
   // Socket Configuration
   static const String socketUrl = String.fromEnvironment(
     'SOCKET_URL',
-    defaultValue: 'http://localhost:8080', // Fallback for development
+    defaultValue: 'https://hrms-bace.vercel.app', // Updated to Vercel URL
   );
 
   // Environment Detection

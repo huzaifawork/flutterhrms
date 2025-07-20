@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/config/environment.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -95,8 +96,8 @@ class _FeaturedTablesSectionState extends State<FeaturedTablesSection> {
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? 'http://localhost:8080/$cleanPath'
-        : 'http://localhost:8080/uploads/$cleanPath';
+        ? '${Environment.currentApiUrl}/$cleanPath'
+        : '${Environment.currentApiUrl}/uploads/$cleanPath';
   }
 
   Widget _getRecommendationBadge(String? reason) {
@@ -658,3 +659,4 @@ class _FeaturedTablesSectionState extends State<FeaturedTablesSection> {
     );
   }
 }
+

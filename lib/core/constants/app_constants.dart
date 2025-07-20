@@ -7,7 +7,7 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration - Backend Server
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'https://hrms-bace.vercel.app';
 
   // Authentication Endpoints
   static const String loginEndpoint = '$baseUrl/auth/login';
@@ -79,3 +79,4 @@ class AppConstants {
   static const String paymentMethodUPI = 'upi';
   static const String paymentMethodWallet = 'wallet';
 }
+

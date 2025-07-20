@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../providers/auth_provider.dart';
 import '../home/home_screen.dart';
@@ -18,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void dispose() {
@@ -53,21 +51,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser != null) {
-        // TODO: Implement Google Sign-In with backend
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Google Sign-In will be implemented soon'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    } catch (error) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Google Sign-In failed: $error'),
+          content: Text(authProvider.error ?? 'Google Sign-In failed'),
           backgroundColor: Colors.red,
         ),
       );

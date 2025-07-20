@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../data/models/user_model.dart';
 import '../../services/auth_service.dart';
@@ -8,6 +9,7 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   final AuthService _authService = AuthService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   UserModel? get currentUser => _currentUser;
   UserModel? get user => _currentUser;
@@ -73,6 +75,55 @@ class AuthProvider with ChangeNotifier {
       final result = await _authService.register(name, email, password);
 
       if (result['success']) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _error = result['message'];
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> signInWithGoogle() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Sign in with Google
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Get Google authentication details
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      if (googleAuth.idToken == null) {
+        _error = 'Failed to get Google ID token';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Send ID token to backend
+      final result = await _authService.googleAuth(googleAuth.idToken!);
+
+      if (result['success']) {
+        _currentUser = result['user'];
         _isLoading = false;
         notifyListeners();
         return true;

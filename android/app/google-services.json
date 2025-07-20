@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "940737064009",
+    "project_id": "hrms-mobile-app",
+    "storage_bucket": "hrms-mobile-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:940737064009:android:hrms_mobile_app",
+        "android_client_info": {
+          "package_name": "com.example.hrms_mobile_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "940737064009-3to85u5j9srlp5sfs0m1fb153flm4c07.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hrms_mobile_app",
+            "certificate_hash": "373e0236f1cd8e2056826e7955c298482f71ec82"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummy_Key_For_Google_SignIn"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

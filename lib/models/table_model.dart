@@ -1,3 +1,5 @@
+import 'package:hrms_mobile_app/core/config/environment.dart';
+
 class TableModel {
   final String id;
   final String tableName;
@@ -40,7 +42,7 @@ class TableModel {
       image: tableData['image'] != null 
           ? (tableData['image'].startsWith('http') 
               ? tableData['image'] 
-              : 'http://localhost:8080${tableData['image']}')
+              : '${Environment.currentApiUrl}${tableData['image']}')
           : null,
       description: tableData['description'],
       location: tableData['location'],
@@ -112,3 +114,5 @@ class TableModel {
   @override
   int get hashCode => id.hashCode;
 }
+
+

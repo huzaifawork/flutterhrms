@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/config/environment.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -79,7 +80,7 @@ class _EnhancedTableReservationScreenState
       if (token != null && userId != null) {
         final response = await http.get(
           Uri.parse(
-              'http://localhost:8080/api/tables/recommendations/$userId?numRecommendations=6&occasion=${_selectedOccasion.toLowerCase()}&timeSlot=${_timePreference.toLowerCase()}&partySize=$_partySize'),
+              '${Environment.currentApiUrl}/api/tables/recommendations/$userId?numRecommendations=6&occasion=${_selectedOccasion.toLowerCase()}&timeSlot=${_timePreference.toLowerCase()}&partySize=$_partySize'),
           headers: {'Authorization': 'Bearer $token'},
         );
 
@@ -130,7 +131,7 @@ class _EnhancedTableReservationScreenState
   Future<void> _loadPopularTables() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/tables/popular?count=6'),
+        Uri.parse('${Environment.currentApiUrl}/api/tables/popular?count=6'),
       );
 
       if (response.statusCode == 200) {
@@ -178,7 +179,7 @@ class _EnhancedTableReservationScreenState
       });
 
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/tables'),
+        Uri.parse('${Environment.currentApiUrl}/api/tables'),
       );
 
       if (response.statusCode == 200) {
@@ -226,8 +227,8 @@ class _EnhancedTableReservationScreenState
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? 'http://localhost:8080/$cleanPath'
-        : 'http://localhost:8080/uploads/$cleanPath';
+        ? '${Environmen{.currenEAniUro}AniUro}ApiUrl}/$cleanPath'
+        : '${Environmen{.currenEAniUrn}AniUrn}ApiUrl}/uploads/$cleanPath';
   }
 
   Widget _getRecommendationBadge(String? reason) {
@@ -1021,3 +1022,4 @@ class _EnhancedTableReservationScreenState
     );
   }
 }
+

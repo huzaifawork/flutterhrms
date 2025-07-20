@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/config/environment.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -78,7 +79,7 @@ class _EnhancedRoomBookingScreenState extends State<EnhancedRoomBookingScreen>
       if (token != null && userId != null) {
         final response = await http.get(
           Uri.parse(
-              'http://localhost:8080/api/rooms/recommendations/$userId?numRecommendations=6&occasion=${_selectedOccasion.toLowerCase()}&groupSize=$_groupSize'),
+              '${Environment.currentApiUrl}/api/rooms/recommendations/$userId?numRecommendations=6&occasion=${_selectedOccasion.toLowerCase()}&groupSize=$_groupSize'),
           headers: {'Authorization': 'Bearer $token'},
         );
 
@@ -128,7 +129,7 @@ class _EnhancedRoomBookingScreenState extends State<EnhancedRoomBookingScreen>
   Future<void> _loadPopularRooms() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/rooms/popular?count=6'),
+        Uri.parse('${Environment.currentApiUrl}/api/rooms/popular?count=6'),
       );
 
       if (response.statusCode == 200) {
@@ -170,12 +171,8 @@ class _EnhancedRoomBookingScreenState extends State<EnhancedRoomBookingScreen>
 
   Future<void> _loadAllRooms() async {
     try {
-      setState(() {
-        _isLoadingAll = true;
-      });
-
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/rooms'),
+        Uri.parse('${Environment.currentApiUrl}/api/rooms'),
       );
 
       if (response.statusCode == 200) {
@@ -222,8 +219,8 @@ class _EnhancedRoomBookingScreenState extends State<EnhancedRoomBookingScreen>
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? 'http://localhost:8080/$cleanPath'
-        : 'http://localhost:8080/uploads/$cleanPath';
+        ? '${Environment.currentApiUrl}/$cleanPath'
+        : '${Environment.currentApiUrl}/uploads/$cleanPath';
   }
 
   String _formatPrice(dynamic price) {
@@ -1003,3 +1000,9 @@ class _EnhancedRoomBookingScreenState extends State<EnhancedRoomBookingScreen>
     );
   }
 }
+
+
+
+
+
+

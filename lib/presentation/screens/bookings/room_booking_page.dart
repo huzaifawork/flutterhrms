@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/config/environment.dart';
 import '../../../services/recommendation_service.dart';
 import '../../../data/models/room_model.dart';
 import '../../providers/auth_provider.dart';
@@ -112,7 +113,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         // Try to get personalized recommendations
         final response = await http.get(
           Uri.parse(
-              'http://localhost:8080/api/rooms/recommendations/$userId?count=6'),
+              '${Environment.currentApiUrl}/api/rooms/recommendations/$userId?count=6'),
           headers: {'Content-Type': 'application/json'},
         );
 
@@ -159,7 +160,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
 
       // Use the correct backend API endpoint
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/rooms/popular?count=6'),
+        Uri.parse('${Environment.currentApiUrl}/api/rooms/popular?count=6'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -242,7 +243,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
   Future<void> _loadAllRoomsFromAPI() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/rooms'),
+        Uri.parse('${Environment.currentApiUrl}/api/rooms'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -266,8 +267,8 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? 'http://localhost:8080/$cleanPath'
-        : 'http://localhost:8080/uploads/$cleanPath';
+        ? '${Environment.currentApiUrl}/$cleanPath'
+        : '${Environment.currentApiUrl}/uploads/$cleanPath';
   }
 
   Widget _getRecommendationBadge(String? reason) {
@@ -1187,3 +1188,8 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     );
   }
 }
+
+
+
+
+

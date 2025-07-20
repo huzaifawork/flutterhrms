@@ -30,23 +30,8 @@ class APIService {
       return Environment.currentApiUrl;
     }
 
-    // Fallback to platform-specific URLs for development
-    if (kIsWeb) {
-      return 'http://localhost:8080';
-    }
-    // For Android emulator, use 10.0.2.2 to access localhost
-    else if (Platform.isAndroid) {
-      // For real Android devices, use the computer's IP address
-      return 'http://192.168.10.6:8080';
-    }
-    // For iOS simulator, use localhost
-    else if (Platform.isIOS) {
-      return 'http://localhost:8080';
-    }
-    // Fallback to localhost
-    else {
-      return 'http://localhost:8080';
-    }
+    // Use Vercel deployed URL for all platforms
+    return 'https://hrms-bace.vercel.app';
   }
 
   // Create a complete URL for a specific API endpoint
@@ -252,8 +237,8 @@ class APIService {
     cleanPath = '/$cleanPath';
 
     // If it's a relative path, prepend the base URL
-    String fullUrl = '$baseUrl$cleanPath';
-    print('Mapped image URL: $fullUrl');
+    final fullUrl = '$baseUrl/$cleanPath';
+    print('Final image URL: $fullUrl');
     return fullUrl;
   }
 }

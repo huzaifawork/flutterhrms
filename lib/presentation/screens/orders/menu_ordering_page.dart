@@ -86,7 +86,7 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
         if (userId['userId'] != null) {
           final personalizedResponse = await http.get(
             Uri.parse(
-                'http://localhost:8080/api/food-recommendations/recommendations/${userId['userId']}?count=8'),
+                '${Environment.currentApiUrl}/api/food-recommendations/recommendations/${userId['userId']}?count=8'),
             headers: {'Content-Type': 'application/json'},
           );
 
@@ -99,7 +99,7 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
         if (response.isEmpty || response['recommendations'] == null) {
           final popularResponse = await http.get(
             Uri.parse(
-                'http://localhost:8080/api/food-recommendations/popular?count=8'),
+                '${Environment.currentApiUrl}/api/food-recommendations/popular?count=8'),
             headers: {'Content-Type': 'application/json'},
           );
 
@@ -355,7 +355,7 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
       // Use the same API endpoint as the website for popular items
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8080/api/food-recommendations/popular?count=6'),
+            '${Environment.currentApiUrl}/api/food-recommendations/popular?count=6'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -405,7 +405,7 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
 
       // Use the same API endpoint as the website: /api/menus
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/menus'),
+        Uri.parse('${Environment.currentApiUrl}/api/menus'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -464,7 +464,7 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
 
     // Construct the full URL from backend path (same as website)
     // Backend returns paths like "/uploads/filename.jpg"
-    final baseUrl = 'http://localhost:8080';
+    final baseUrl = '${Environment.currentApiUrl}';
     final cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
     return '$baseUrl$cleanPath';
   }
@@ -2289,3 +2289,5 @@ class _MenuOrderingPageState extends State<MenuOrderingPage>
     );
   }
 }
+
+

@@ -1,3 +1,5 @@
+import 'package:hrms_mobile_app/core/config/environment.dart';
+
 class Room {
   final String id;
   final String roomNumber;
@@ -39,7 +41,7 @@ class Room {
       image: roomData['image'] != null 
           ? (roomData['image'].startsWith('http') 
               ? roomData['image'] 
-              : 'http://localhost:8080${roomData['image']}')
+              : '${Environment.currentApiUrl}${roomData['image']}')
           : null,
       recommendationReason: json['reason'] ?? json['recommendationReason'],
       score: json['score']?.toDouble(),
@@ -106,3 +108,4 @@ class Room {
   @override
   int get hashCode => id.hashCode;
 }
+

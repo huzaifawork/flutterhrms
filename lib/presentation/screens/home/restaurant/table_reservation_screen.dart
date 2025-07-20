@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hrms_mobile_app/core/config/environment.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -185,7 +186,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.10.6:8080/api/tables/availability').replace(
+        Uri.parse('${Environment.currentApiUrl}/api/tables/availability').replace(
           queryParameters: {
             'reservationDate': DateFormat('yyyy-MM-dd').format(_selectedDate),
             'time':
@@ -1122,3 +1123,4 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
     );
   }
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/config/environment.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -333,8 +334,8 @@ class _TableReservationPageState extends State<TableReservationPage>
     if (imagePath.startsWith('http')) return imagePath;
     final cleanPath = imagePath.replaceAll(RegExp(r'^/+'), '');
     return cleanPath.contains('uploads')
-        ? 'http://localhost:8080/$cleanPath'
-        : 'http://localhost:8080/uploads/$cleanPath';
+        ? '${Environment.currentApiUrl}/$cleanPath'
+        : '${Environment.currentApiUrl}/uploads/$cleanPath';
   }
 
   Widget _getRecommendationBadge(String? reason) {
@@ -1376,3 +1377,5 @@ class _TableReservationPageState extends State<TableReservationPage>
     );
   }
 }
+
+
