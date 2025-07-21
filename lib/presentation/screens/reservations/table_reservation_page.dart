@@ -430,7 +430,9 @@ class _TableReservationPageState extends State<TableReservationPage>
                   children: [
                     // Occasion Filter
                     SizedBox(
-                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
+                      width: MediaQuery.of(context).size.width > 400
+                          ? null
+                          : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -448,7 +450,8 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color:
+                                      const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButtonHideUnderline(
@@ -478,7 +481,9 @@ class _TableReservationPageState extends State<TableReservationPage>
 
                     // Party Size Filter
                     SizedBox(
-                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
+                      width: MediaQuery.of(context).size.width > 400
+                          ? null
+                          : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -496,7 +501,8 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color:
+                                      const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TextFormField(
@@ -521,7 +527,9 @@ class _TableReservationPageState extends State<TableReservationPage>
 
                     // Time Preference Filter
                     SizedBox(
-                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
+                      width: MediaQuery.of(context).size.width > 400
+                          ? null
+                          : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -539,7 +547,8 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color:
+                                      const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButtonHideUnderline(
@@ -649,10 +658,13 @@ class _TableReservationPageState extends State<TableReservationPage>
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
-                              // Responsive grid based on screen width
-                              int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
-                              if (constraints.maxWidth > 900) crossAxisCount = 4;
-                              if (constraints.maxWidth < 350) crossAxisCount = 1;
+                              // Force single column on mobile to prevent overflow
+                              int crossAxisCount =
+                                  1; // Always 1 card per row on mobile
+                              if (constraints.maxWidth > 768)
+                                crossAxisCount = 2; // Tablet
+                              if (constraints.maxWidth > 1024)
+                                crossAxisCount = 3; // Desktop
 
                               return GridView.builder(
                                 physics: const NeverScrollableScrollPhysics(),
@@ -660,7 +672,9 @@ class _TableReservationPageState extends State<TableReservationPage>
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: crossAxisCount,
-                                  childAspectRatio: 0.75,
+                                  childAspectRatio: crossAxisCount == 1
+                                      ? 1.2
+                                      : 0.75, // Adjust aspect ratio for single column
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
                                 ),
@@ -991,18 +1005,21 @@ class _TableReservationPageState extends State<TableReservationPage>
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      // Responsive grid based on screen width
-                      int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
-                      if (constraints.maxWidth > 900) crossAxisCount = 4;
-                      if (constraints.maxWidth < 350) crossAxisCount = 1;
+                      // Force single column on mobile to prevent overflow
+                      int crossAxisCount = 1; // Always 1 card per row on mobile
+                      if (constraints.maxWidth > 768)
+                        crossAxisCount = 2; // Tablet
+                      if (constraints.maxWidth > 1024)
+                        crossAxisCount = 3; // Desktop
 
                       return GridView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          childAspectRatio: 0.75,
+                          childAspectRatio: crossAxisCount == 1
+                              ? 1.2
+                              : 0.75, // Adjust aspect ratio for single column
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -1045,21 +1062,30 @@ class _TableReservationPageState extends State<TableReservationPage>
                 child: Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16)),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: Icon(Icons.table_restaurant,
-                                color: Colors.white),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: Colors.grey[800],
+                            child: const Center(
+                              child: Icon(Icons.table_restaurant,
+                                  color: Colors.white),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    
+
                     // Gradient overlay
                     Container(
                       decoration: BoxDecoration(
@@ -1178,8 +1204,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF64FFDA)
-                                  .withOpacity(0.2),
+                              color: const Color(0xFF64FFDA).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -1229,10 +1254,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF64FFDA),
-                                  Color(0xFF4FD1C7)
-                                ],
+                                colors: [Color(0xFF64FFDA), Color(0xFF4FD1C7)],
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -1256,8 +1278,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             child: Text(
                               table['explanation'],
                               style: TextStyle(
-                                color: const Color(0xFF64FFDA)
-                                    .withOpacity(0.9),
+                                color: const Color(0xFF64FFDA).withOpacity(0.9),
                                 fontSize: 10,
                                 fontStyle: FontStyle.italic,
                               ),
@@ -1276,5 +1297,4 @@ class _TableReservationPageState extends State<TableReservationPage>
       ),
     );
   }
-} 
-
+}
