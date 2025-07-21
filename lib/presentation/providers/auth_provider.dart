@@ -9,7 +9,9 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   final AuthService _authService = AuthService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   UserModel? get currentUser => _currentUser;
   UserModel? get user => _currentUser;
