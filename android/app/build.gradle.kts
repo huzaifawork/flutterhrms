@@ -28,9 +28,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // Google Sign-In configuration
-        resValue("string", "default_web_client_id", "940737064009-sf2stfd9kf6dq9e6s188l2pe1hh6q75o.apps.googleusercontent.com")
-
         // Optimize for heap space issues
         multiDexEnabled = true
     }
