@@ -31,7 +31,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
   bool _isLoadingAll = true;
   String? _error;
 
-  // Advanced filters - exactly like website
+  // Advanced filters
   String _selectedOccasion = 'Any Occasion';
   int _groupSize = 2;
   String _budgetRange = 'Any Budget';
@@ -105,12 +105,10 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         _error = null;
       });
 
-      // Get user ID for personalized recommendations
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
 
       if (userId != null) {
-        // Try to get personalized recommendations
         final response = await http.get(
           Uri.parse(
               '${Environment.currentApiUrl}/api/rooms/recommendations/$userId?count=6'),
@@ -133,14 +131,12 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         }
       }
 
-      // Fallback to popular rooms if personalized recommendations fail
       await _loadPopularRooms();
       setState(() {
         _recommendedRooms = _popularRooms;
       });
     } catch (e) {
       print('Error loading recommended rooms: $e');
-      // Fallback to popular rooms
       await _loadPopularRooms();
       setState(() {
         _recommendedRooms = _popularRooms;
@@ -158,7 +154,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         _isLoadingPopular = true;
       });
 
-      // Use the correct backend API endpoint
       final response = await http.get(
         Uri.parse('${Environment.currentApiUrl}/api/rooms/popular?count=6'),
         headers: {'Content-Type': 'application/json'},
@@ -175,7 +170,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
           });
         }
       } else {
-        // Fallback to all rooms API
         await _loadAllRoomsFromAPI();
         setState(() {
           _popularRooms = _allRooms.take(6).toList();
@@ -183,7 +177,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
       }
     } catch (e) {
       print('Error loading popular rooms: $e');
-      // Fallback to all rooms API
       await _loadAllRoomsFromAPI();
       setState(() {
         _popularRooms = _allRooms.take(6).toList();
@@ -201,7 +194,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         _isLoadingAll = true;
       });
 
-      // Load all rooms from the backend API
       await _loadAllRoomsFromAPI();
     } catch (e) {
       print('Error loading all rooms: $e');
@@ -216,7 +208,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     await _loadRecommendedRooms();
   }
 
-  // Helper method to map room data from API to consistent format
   Map<String, dynamic> _mapRoomData(Map<String, dynamic> room,
       {bool isRecommended = false}) {
     return {
@@ -239,7 +230,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     };
   }
 
-  // Load all rooms from the backend API
   Future<void> _loadAllRoomsFromAPI() async {
     try {
       final response = await http.get(
@@ -307,7 +297,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: badge['color'].withValues(alpha: 0.4),
+            color: badge['color'].withOpacity(0.4),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -348,12 +338,10 @@ class _RoomBookingPageState extends State<RoomBookingPage>
   }
 
   void _handleRoomTap(Map<String, dynamic> room) async {
-    // Record view interaction
     await _recordInteraction(room['_id'], 'view');
 
     if (!mounted) return;
 
-    // Convert to RoomModel and navigate to booking screen
     final roomModel = RoomModel(
       id: room['_id'],
       roomNumber: room['roomName'] ?? 'Unknown Room',
@@ -430,26 +418,34 @@ class _RoomBookingPageState extends State<RoomBookingPage>
             ),
           ),
 
-          // Tab Navigation - Exactly like website (3 tabs)
+          // Tab Navigation
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildTabButton(
-                      0, '💝 RECOMMENDED', const Color(0xFF64FFDA)),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child:
-                      _buildTabButton(1, '🔥 POPULAR', const Color(0xFFFF6B6B)),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: _buildTabButton(
-                      2, '🏢 ALL ROOMS', const Color(0xFFBB86FC)),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Responsive tab sizing
+                final isSmall = constraints.maxWidth < 400;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _buildTabButton(
+                          0,
+                          isSmall ? '💝' : '💝 RECOMMENDED',
+                          const Color(0xFF64FFDA)),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: _buildTabButton(1, isSmall ? '🔥' : '🔥 POPULAR',
+                          const Color(0xFFFF6B6B)),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: _buildTabButton(2, isSmall ? '🏢' : '🏢 ALL ROOMS',
+                          const Color(0xFFBB86FC)),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
 
@@ -460,13 +456,8 @@ class _RoomBookingPageState extends State<RoomBookingPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Recommended Rooms Tab
                 _buildRecommendedRoomsView(),
-
-                // Popular Rooms Tab
                 _buildPopularRoomsView(),
-
-                // All Rooms Tab
                 _buildAllRoomsView(),
               ],
             ),
@@ -481,33 +472,35 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     return GestureDetector(
       onTap: () => _tabController.animateTo(index),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: [color, color.withValues(alpha: 0.8)],
+                  colors: [color, color.withOpacity(0.8)],
                 )
               : null,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.4),
+                    color: color.withOpacity(0.4),
                     blurRadius: 15,
                   ),
                 ]
               : null,
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected
-                ? const Color(0xFF0A192F)
-                : Colors.white.withValues(alpha: 0.9),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF0A192F)
+                  : Colors.white.withOpacity(0.9),
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -516,14 +509,14 @@ class _RoomBookingPageState extends State<RoomBookingPage>
   Widget _buildRecommendedRoomsView() {
     return Column(
       children: [
-        // Advanced Filters - Ultra Compact Version
+        // Advanced Filters
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -558,58 +551,68 @@ class _RoomBookingPageState extends State<RoomBookingPage>
               // Expandable content
               if (_filtersExpanded) ...[
                 const SizedBox(height: 8),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmall = constraints.maxWidth < 350;
+                    return Column(
+                      children: [
+                        // First Row: Occasion and Group Size
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildCompactFilterDropdown(
+                                isSmall ? '🎉' : '🎉 Occasion',
+                                _selectedOccasion,
+                                _occasions,
+                                (value) =>
+                                    setState(() => _selectedOccasion = value!),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: _buildCompactFilterInput(
+                                isSmall ? '👥' : '👥 Size',
+                                _groupSize.toString(),
+                                (value) => setState(() =>
+                                    _groupSize = int.tryParse(value) ?? 2),
+                              ),
+                            ),
+                          ],
+                        ),
 
-                // First Row: Occasion and Group Size
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCompactFilterDropdown(
-                        '🎉 Occasion',
-                        _selectedOccasion,
-                        _occasions,
-                        (value) => setState(() => _selectedOccasion = value!),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: _buildCompactFilterInput(
-                        '👥 Size',
-                        _groupSize.toString(),
-                        (value) => setState(
-                            () => _groupSize = int.tryParse(value) ?? 2),
-                      ),
-                    ),
-                  ],
+                        const SizedBox(height: 6),
+
+                        // Second Row: Budget and Room Type
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildCompactFilterDropdown(
+                                isSmall ? '💰' : '💰 Budget',
+                                _budgetRange,
+                                _budgetRanges,
+                                (value) =>
+                                    setState(() => _budgetRange = value!),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: _buildCompactFilterDropdown(
+                                isSmall ? '🏢' : '🏢 Type',
+                                _roomType,
+                                _roomTypes,
+                                (value) => setState(() => _roomType = value!),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 6),
 
-                // Second Row: Budget and Room Type
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCompactFilterDropdown(
-                        '💰 Budget',
-                        _budgetRange,
-                        _budgetRanges,
-                        (value) => setState(() => _budgetRange = value!),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: _buildCompactFilterDropdown(
-                        '🏢 Type',
-                        _roomType,
-                        _roomTypes,
-                        (value) => setState(() => _roomType = value!),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                // Amenities Filter - Horizontal scroll
+                // Amenities Filter
                 SizedBox(
                   height: 28,
                   child: SingleChildScrollView(
@@ -634,14 +637,13 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                                   horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF64FFDA)
-                                        .withValues(alpha: 0.3)
-                                    : Colors.white.withValues(alpha: 0.1),
+                                    ? const Color(0xFF64FFDA).withOpacity(0.3)
+                                    : Colors.white.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isSelected
                                       ? const Color(0xFF64FFDA)
-                                      : Colors.white.withValues(alpha: 0.3),
+                                      : Colors.white.withOpacity(0.3),
                                 ),
                               ),
                               child: Text(
@@ -664,7 +666,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
 
                 const SizedBox(height: 6),
 
-                // Get Recommendations Button - Very compact
+                // Get Recommendations Button
                 SizedBox(
                   width: double.infinity,
                   height: 32,
@@ -678,10 +680,11 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    child: const Text(
-                      'Get Recommendations',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                    child: const FittedBox(
+                      child: Text(
+                        'Get Recommendations',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ),
@@ -692,7 +695,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
 
         const SizedBox(height: 8),
 
-        // Recommendations Grid - Takes most of the space
+        // Recommendations Grid
         Expanded(
           child: _buildRoomsGrid(_recommendedRooms, _isLoadingRecommended,
               isRecommended: true),
@@ -709,93 +712,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     return _buildRoomsGrid(_allRooms, _isLoadingAll);
   }
 
-  Widget _buildFilterDropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0A192F),
-            border: Border.all(
-                color: const Color(0xFF64FFDA).withValues(alpha: 0.3)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              onChanged: onChanged,
-              dropdownColor: const Color(0xFF0A192F),
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-              isExpanded: true,
-              items: items.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterInput(
-    String label,
-    String value,
-    ValueChanged<String> onChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0A192F),
-            border: Border.all(
-                color: const Color(0xFF64FFDA).withValues(alpha: 0.3)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextFormField(
-            initialValue: value,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-            ),
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Compact filter dropdown for collapsible filters
   Widget _buildCompactFilterDropdown(
     String label,
     String value,
@@ -819,8 +735,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
           padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF0A192F),
-            border: Border.all(
-                color: const Color(0xFF64FFDA).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF64FFDA).withOpacity(0.3)),
             borderRadius: BorderRadius.circular(6),
           ),
           child: DropdownButtonHideUnderline(
@@ -833,7 +748,11 @@ class _RoomBookingPageState extends State<RoomBookingPage>
               items: items.map((item) {
                 return DropdownMenuItem(
                   value: item,
-                  child: Text(item, style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    item,
+                    style: const TextStyle(fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
             ),
@@ -843,7 +762,6 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     );
   }
 
-  // Compact filter input for collapsible filters
   Widget _buildCompactFilterInput(
     String label,
     String value,
@@ -866,8 +784,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
           padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF0A192F),
-            border: Border.all(
-                color: const Color(0xFF64FFDA).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF64FFDA).withOpacity(0.3)),
             borderRadius: BorderRadius.circular(6),
           ),
           child: TextFormField(
@@ -913,17 +830,17 @@ class _RoomBookingPageState extends State<RoomBookingPage>
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Responsive grid based on screen width
-          int crossAxisCount = 2;
-          double childAspectRatio = 0.7;
+          int crossAxisCount = constraints.maxWidth > 600
+              ? 3
+              : constraints.maxWidth > 400
+                  ? 2
+                  : 1;
 
-          if (constraints.maxWidth > 600) {
-            crossAxisCount = 3;
-            childAspectRatio = 0.75;
-          }
-          if (constraints.maxWidth > 900) {
-            crossAxisCount = 4;
-            childAspectRatio = 0.8;
-          }
+          double childAspectRatio = constraints.maxWidth > 600
+              ? 0.75
+              : constraints.maxWidth > 400
+                  ? 0.7
+                  : 0.8;
 
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -951,141 +868,125 @@ class _RoomBookingPageState extends State<RoomBookingPage>
     final isAvailable = status.toLowerCase() == 'available';
     final pricePerHour = (room['pricePerHour'] ?? 0).toDouble();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Responsive sizing
-        final cardWidth = constraints.maxWidth;
-        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
-        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
-        // final padding = cardWidth < 150 ? 6.0 : 8.0;
-        // final buttonHeight = cardWidth < 150 ? 28.0 : 32.0;
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      color: const Color(0xFF172A45),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _handleRoomTap(room),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image and badges
+            Expanded(
+              flex: 3,
+              child: Stack(
+                children: [
+                  // Room image
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[800],
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
-        return GestureDetector(
-          onTap: () => _handleRoomTap(room),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.05),
+                  // Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Recommendation badge (only for recommended rooms)
+                  if (isRecommended)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child:
+                          _getRecommendationBadge(room['recommendationReason']),
+                    ),
+
+                  // Status badge
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isAvailable ? Colors.green : Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        status,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Favorite button
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () => _handleRoomFavorite(room),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.favorite_border,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isAvailable
-                    ? const Color(0xFF64FFDA).withValues(alpha: 0.3)
-                    : Colors.red.withValues(alpha: 0.3),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
-                      .withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image and badges
-                Expanded(
-                  flex: 3,
-                  child: Stack(
-                    children: [
-                      // Room image
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16)),
-                          image: DecorationImage(
-                            image: NetworkImage(imageUrl),
-                            fit: BoxFit.cover,
-                            onError: (exception, stackTrace) {
-                              // Handle image loading error
-                            },
-                          ),
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16)),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.3),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
 
-                      // Recommendation badge (only for recommended rooms)
-                      if (isRecommended)
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: _getRecommendationBadge(
-                              room['recommendationReason']),
-                        ),
-
-                      // Status badge
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isAvailable ? Colors.green : Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            status,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Favorite button
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => _handleRoomFavorite(room),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.favorite_border,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Room details
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
+            // Room details
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmall = constraints.maxWidth < 150;
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Room name
@@ -1093,7 +994,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                           room['roomName'] ?? 'Unknown Room',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: titleFontSize,
+                            fontSize: isSmall ? 12 : 14,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
@@ -1108,14 +1009,14 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                             Icon(
                               Icons.people,
                               color: Colors.grey[400],
-                              size: 12,
+                              size: isSmall ? 10 : 12,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${room['capacity'] ?? 2} people',
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontSize: fontSize,
+                                fontSize: isSmall ? 10 : 12,
                               ),
                             ),
                             const Spacer(),
@@ -1123,7 +1024,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                               'Rs. ${pricePerHour.toStringAsFixed(0)}/hr',
                               style: TextStyle(
                                 color: const Color(0xFF64FFDA),
-                                fontSize: fontSize,
+                                fontSize: isSmall ? 10 : 12,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1143,7 +1044,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                                         ? Icons.star_half
                                         : Icons.star_border,
                                 color: Colors.amber,
-                                size: 12,
+                                size: isSmall ? 10 : 12,
                               );
                             }),
                             const SizedBox(width: 4),
@@ -1151,7 +1052,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                               rating.toStringAsFixed(1),
                               style: TextStyle(
                                 color: Colors.grey[400],
-                                fontSize: 10,
+                                fontSize: isSmall ? 8 : 10,
                               ),
                             ),
                           ],
@@ -1164,6 +1065,7 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                             padding: const EdgeInsets.only(top: 4),
                             child: Wrap(
                               spacing: 4,
+                              runSpacing: 2,
                               children: (room['amenities'] as List)
                                   .take(3)
                                   .map<Widget>((amenity) {
@@ -1172,14 +1074,14 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                                       horizontal: 4, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF64FFDA)
-                                        .withValues(alpha: 0.2),
+                                        .withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     amenity.toString(),
-                                    style: const TextStyle(
-                                      color: Color(0xFF64FFDA),
-                                      fontSize: 8,
+                                    style: TextStyle(
+                                      color: const Color(0xFF64FFDA),
+                                      fontSize: isSmall ? 7 : 8,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -1188,16 +1090,15 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                             ),
                           ),
 
-                        // Recommendation explanation (only for recommended rooms)
+                        // Recommendation explanation
                         if (isRecommended && room['explanation'] != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               room['explanation'],
                               style: TextStyle(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.8),
-                                fontSize: 9,
+                                color: const Color(0xFF64FFDA).withOpacity(0.8),
+                                fontSize: isSmall ? 8 : 9,
                                 fontStyle: FontStyle.italic,
                               ),
                               maxLines: 2,
@@ -1205,14 +1106,14 @@ class _RoomBookingPageState extends State<RoomBookingPage>
                             ),
                           ),
                       ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

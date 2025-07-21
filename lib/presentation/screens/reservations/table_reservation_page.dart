@@ -26,15 +26,10 @@ class _TableReservationPageState extends State<TableReservationPage>
   bool _isLoadingAll = true;
   String? _error;
 
-  // Customization filters - exactly like website
+  // Customization filters
   String _selectedOccasion = 'Any Occasion';
   int _partySize = 2;
   String _timePreference = 'Any Time';
-
-  // Booking form data - exactly like website
-  String _selectedDate = '';
-  String _selectedTime = '';
-  int _guests = 2;
 
   final List<String> _occasions = [
     'Any Occasion',
@@ -52,20 +47,6 @@ class _TableReservationPageState extends State<TableReservationPage>
     'Afternoon',
     'Evening',
     'Night'
-  ];
-
-  final List<String> _timeSlots = [
-    '17:00',
-    '17:30',
-    '18:00',
-    '18:30',
-    '19:00',
-    '19:30',
-    '20:00',
-    '20:30',
-    '21:00',
-    '21:30',
-    '22:00'
   ];
 
   @override
@@ -95,7 +76,6 @@ class _TableReservationPageState extends State<TableReservationPage>
         _error = null;
       });
 
-      print('🔍 Loading table recommendations...');
       final response = await RecommendationService.getTableRecommendations(
         occasion: _selectedOccasion == 'Any Occasion'
             ? ''
@@ -107,14 +87,10 @@ class _TableReservationPageState extends State<TableReservationPage>
         useCache: false,
       );
 
-      print('📊 Table Recommendation API Response: $response');
-
-      // Check if we got actual table recommendations (not just popular fallback)
       bool isActuallyPersonalized = false;
       final recommendations = response['recommendations'] ?? [];
 
       if (response['success'] == true && recommendations.isNotEmpty) {
-        // Check if these are real recommendations by looking for recommendation-specific fields
         for (var item in recommendations) {
           if (item['reason'] != null ||
               item['score'] != null ||
@@ -127,7 +103,6 @@ class _TableReservationPageState extends State<TableReservationPage>
       }
 
       if (isActuallyPersonalized) {
-        print('✅ Got actual table recommendations: ${recommendations.length}');
         final aiRecommendations =
             recommendations.map<Map<String, dynamic>>((item) {
           final table = item['table'] ?? item;
@@ -150,23 +125,16 @@ class _TableReservationPageState extends State<TableReservationPage>
           _recommendedTables = aiRecommendations;
         });
 
-        // If we have fewer than 4 AI recommendations, supplement with popular tables
         if (_recommendedTables.length < 4) {
-          print(
-              '🔄 Supplementing ${_recommendedTables.length} AI table recommendations with popular tables...');
           await _supplementWithPopularTables();
         }
       } else {
-        print(
-            '⚠️ No personalized table recommendations available, using curated selection');
         await _loadCuratedTableRecommendations();
       }
     } catch (e) {
-      print('❌ Error loading table recommendations: $e');
       setState(() {
         _error = 'Error loading recommendations: $e';
       });
-      // Fallback to curated selection
       await _loadCuratedTableRecommendations();
     } finally {
       setState(() {
@@ -181,7 +149,6 @@ class _TableReservationPageState extends State<TableReservationPage>
         _isLoadingAll = true;
       });
 
-      // Get all tables from API
       final response = await RecommendationService.getPopularTables(limit: 20);
 
       if (response['success'] == true) {
@@ -212,29 +179,24 @@ class _TableReservationPageState extends State<TableReservationPage>
   Future<void> _supplementWithPopularTables() async {
     try {
       if (_allTables.isEmpty) {
-        print('⚠️ No tables available for supplementing');
         return;
       }
 
-      // Get existing recommendation IDs to avoid duplicates
       final existingIds =
           _recommendedTables.map((table) => table['_id']).toSet();
 
-      // Get additional high-rated tables not already recommended
       final availableTables = _allTables
           .where((table) =>
               (table['status'] ?? 'Available').toLowerCase() == 'available' &&
               !existingIds.contains(table['_id']))
           .toList();
 
-      // Sort by rating
       availableTables.sort((a, b) {
         final ratingA = (a['avgRating'] ?? 4.0).toDouble();
         final ratingB = (b['avgRating'] ?? 4.0).toDouble();
         return ratingB.compareTo(ratingA);
       });
 
-      // Take up to 4 additional tables to reach a total of 6
       final targetTotal = 6;
       final needed = targetTotal - _recommendedTables.length;
       final supplementTables = availableTables.take(needed).toList();
@@ -259,14 +221,9 @@ class _TableReservationPageState extends State<TableReservationPage>
         setState(() {
           _recommendedTables.addAll(additionalRecommendations);
         });
-
-        print(
-            '✅ Added ${additionalRecommendations.length} popular tables. Total: ${_recommendedTables.length}');
-        print(
-            '📋 Final table recommendations: ${_recommendedTables.map((table) => '${table['tableName']} (${table['recommendationReason']})').join(', ')}');
       }
     } catch (e) {
-      print('❌ Error supplementing with popular tables: $e');
+      print('Error supplementing with popular tables: $e');
     }
   }
 
@@ -277,17 +234,14 @@ class _TableReservationPageState extends State<TableReservationPage>
       }
 
       if (_allTables.isEmpty) {
-        print('⚠️ No tables available for curated recommendations');
         return;
       }
 
-      // Create curated selection of top-rated available tables
       final availableTables = _allTables
           .where((table) =>
               (table['status'] ?? 'Available').toLowerCase() == 'available')
           .toList();
 
-      // Sort by rating and take top 6
       availableTables.sort((a, b) {
         final ratingA = (a['avgRating'] ?? 4.0).toDouble();
         final ratingB = (b['avgRating'] ?? 4.0).toDouble();
@@ -315,11 +269,8 @@ class _TableReservationPageState extends State<TableReservationPage>
       setState(() {
         _recommendedTables = curatedRecommendations;
       });
-
-      print(
-          '🎯 Curated table selection: ${curatedRecommendations.map((table) => '${table['tableName']} (${table['avgRating']})').join(', ')}');
     } catch (e) {
-      print('❌ Error loading curated table recommendations: $e');
+      print('Error loading curated table recommendations: $e');
     }
   }
 
@@ -416,10 +367,8 @@ class _TableReservationPageState extends State<TableReservationPage>
   }
 
   void _handleTableTap(Map<String, dynamic> table) async {
-    // Record view interaction
     await _recordInteraction(table['_id'], 'view');
 
-    // Convert to TableModel and navigate to reservation screen
     final tableModel = TableModel(
       id: table['_id'],
       tableNumber: table['tableName'] ?? 'Unknown',
@@ -452,9 +401,9 @@ class _TableReservationPageState extends State<TableReservationPage>
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Customization Filters - Exactly like website
+          // Customization Filters
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
@@ -474,11 +423,14 @@ class _TableReservationPageState extends State<TableReservationPage>
                 ),
                 const SizedBox(height: 16),
 
-                // Filter Row
-                Row(
+                // Filter Row - Made responsive with Wrap
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     // Occasion Filter
-                    Expanded(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -496,12 +448,12 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color:
-                                      const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
+                                isExpanded: true,
                                 value: _selectedOccasion,
                                 onChanged: (value) {
                                   setState(() {
@@ -523,10 +475,10 @@ class _TableReservationPageState extends State<TableReservationPage>
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
 
                     // Party Size Filter
-                    Expanded(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -544,8 +496,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color:
-                                      const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TextFormField(
@@ -567,10 +518,10 @@ class _TableReservationPageState extends State<TableReservationPage>
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
 
                     // Time Preference Filter
-                    Expanded(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width > 400 ? null : double.infinity,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -588,12 +539,12 @@ class _TableReservationPageState extends State<TableReservationPage>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0A192F),
                               border: Border.all(
-                                  color:
-                                      const Color(0xFF64FFDA).withOpacity(0.3)),
+                                  color: const Color(0xFF64FFDA).withOpacity(0.3)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
+                                isExpanded: true,
                                 value: _timePreference,
                                 onChanged: (value) {
                                   setState(() {
@@ -643,7 +594,7 @@ class _TableReservationPageState extends State<TableReservationPage>
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Recommendations Grid
           _isLoadingRecommended
@@ -652,63 +603,56 @@ class _TableReservationPageState extends State<TableReservationPage>
                   child: Center(child: LoadingWidget()),
                 )
               : _error != null
-                  ? SizedBox(
-                      height: 300,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline,
-                                color: Colors.red, size: 48),
-                            const SizedBox(height: 16),
-                            Text(
-                              _error!,
-                              style: const TextStyle(color: Colors.red),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _getRecommendations,
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
+                  ? Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: Colors.red, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            _error!,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _getRecommendations,
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     )
                   : _recommendedTables.isEmpty
-                      ? const SizedBox(
-                          height: 300,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.table_restaurant_outlined,
-                                    color: Colors.grey, size: 48),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No recommendations available',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
+                      ? Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.table_restaurant_outlined,
+                                  color: Colors.grey, size: 48),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No recommendations available',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _getRecommendations,
+                                child: const Text('Try Again'),
+                              ),
+                            ],
                           ),
                         )
                       : Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               // Responsive grid based on screen width
-                              int crossAxisCount = 2;
-                              double childAspectRatio = 0.75;
-
-                              if (constraints.maxWidth > 600) {
-                                crossAxisCount = 3;
-                                childAspectRatio = 0.8;
-                              }
-                              if (constraints.maxWidth > 900) {
-                                crossAxisCount = 4;
-                                childAspectRatio = 0.85;
-                              }
+                              int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+                              if (constraints.maxWidth > 900) crossAxisCount = 4;
+                              if (constraints.maxWidth < 350) crossAxisCount = 1;
 
                               return GridView.builder(
                                 physics: const NeverScrollableScrollPhysics(),
@@ -716,7 +660,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: crossAxisCount,
-                                  childAspectRatio: childAspectRatio,
+                                  childAspectRatio: 0.75,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
                                 ),
@@ -731,7 +675,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                           ),
                         ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -744,9 +688,9 @@ class _TableReservationPageState extends State<TableReservationPage>
       body: SafeArea(
         child: Column(
           children: [
-            // Modern Header with gradient
+            // Header Section
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -757,8 +701,8 @@ class _TableReservationPageState extends State<TableReservationPage>
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -792,7 +736,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             ),
                           ),
                         ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,66 +744,65 @@ class _TableReservationPageState extends State<TableReservationPage>
                             const Text(
                               'Reserve Tables',
                               style: TextStyle(
-                                fontSize: 26,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                letterSpacing: 0.5,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Find your perfect dining spot',
                               style: TextStyle(
-                                fontSize: 15,
+                                fontSize: 14,
                                 color: Colors.white.withOpacity(0.8),
-                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      // Search and notification icons
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
+                      // Search and notification icons - hidden on small screens
+                      if (MediaQuery.of(context).size.width > 350)
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.search,
+                                color: Colors.white,
+                                size: 20,
                               ),
                             ),
-                            child: const Icon(
-                              Icons.search,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white,
+                                size: 20,
                               ),
                             ),
-                            child: const Icon(
-                              Icons.notifications_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 20),
 
-                  // Modern Tab Selector
+                  // Tab Selector
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
@@ -885,7 +828,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 gradient: _tabController.index == 0
                                     ? LinearGradient(
@@ -912,21 +855,20 @@ class _TableReservationPageState extends State<TableReservationPage>
                                 children: [
                                   Icon(
                                     Icons.psychology_outlined,
-                                    size: 20,
+                                    size: 18,
                                     color: _tabController.index == 0
                                         ? const Color(0xFF0F172A)
                                         : Colors.white.withOpacity(0.8),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   Text(
                                     'FOR YOU',
                                     style: TextStyle(
                                       color: _tabController.index == 0
                                           ? const Color(0xFF0F172A)
                                           : Colors.white.withOpacity(0.8),
-                                      fontSize: 15,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
                                     ),
                                   ),
                                 ],
@@ -941,7 +883,7 @@ class _TableReservationPageState extends State<TableReservationPage>
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 gradient: _tabController.index == 1
                                     ? LinearGradient(
@@ -968,21 +910,20 @@ class _TableReservationPageState extends State<TableReservationPage>
                                 children: [
                                   Icon(
                                     Icons.restaurant_outlined,
-                                    size: 20,
+                                    size: 18,
                                     color: _tabController.index == 1
                                         ? const Color(0xFF0F172A)
                                         : Colors.white.withOpacity(0.8),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   Text(
                                     'ALL TABLES',
                                     style: TextStyle(
                                       color: _tabController.index == 1
                                           ? const Color(0xFF0F172A)
                                           : Colors.white.withOpacity(0.8),
-                                      fontSize: 15,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
                                     ),
                                   ),
                                 ],
@@ -997,21 +938,18 @@ class _TableReservationPageState extends State<TableReservationPage>
               ),
             ),
 
-            // Tab Content with proper scrolling
+            // Tab Content
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(top: 20),
-                child: TabBarView(
-                  controller: _tabController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    // Recommended Tables Tab
-                    _buildRecommendedTablesView(),
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  // Recommended Tables Tab
+                  _buildRecommendedTablesView(),
 
-                    // All Tables Tab
-                    _buildAllTablesView(),
-                  ],
-                ),
+                  // All Tables Tab
+                  _buildAllTablesView(),
+                ],
               ),
             ),
           ],
@@ -1029,48 +967,44 @@ class _TableReservationPageState extends State<TableReservationPage>
               child: Center(child: LoadingWidget()),
             )
           : _allTables.isEmpty
-              ? const SizedBox(
-                  height: 300,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.table_restaurant_outlined,
-                            color: Colors.grey, size: 48),
-                        SizedBox(height: 16),
-                        Text(
-                          'No tables available',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.table_restaurant_outlined,
+                          color: Colors.grey, size: 48),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No tables available',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadAllTables,
+                        child: const Text('Refresh'),
+                      ),
+                    ],
                   ),
                 )
               : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       // Responsive grid based on screen width
-                      int crossAxisCount = 2;
-                      double childAspectRatio = 0.8;
-
-                      if (constraints.maxWidth > 600) {
-                        crossAxisCount = 3;
-                        childAspectRatio = 0.85;
-                      }
-                      if (constraints.maxWidth > 900) {
-                        crossAxisCount = 4;
-                        childAspectRatio = 0.9;
-                      }
+                      int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+                      if (constraints.maxWidth > 900) crossAxisCount = 4;
+                      if (constraints.maxWidth < 350) crossAxisCount = 1;
 
                       return GridView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          childAspectRatio: childAspectRatio,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
                         ),
                         itemCount: _allTables.length,
                         itemBuilder: (context, index) {
@@ -1092,336 +1026,255 @@ class _TableReservationPageState extends State<TableReservationPage>
     final status = table['status'] ?? 'Available';
     final isAvailable = status.toLowerCase() == 'available';
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Responsive sizing
-        final cardWidth = constraints.maxWidth;
-        final fontSize = cardWidth < 150 ? 10.0 : 12.0;
-        final titleFontSize = cardWidth < 150 ? 12.0 : 14.0;
-        // final padding = cardWidth < 150 ? 6.0 : 8.0;
-        // final buttonHeight = cardWidth < 150 ? 28.0 : 32.0;
-
-        return GestureDetector(
-          onTap: () => _handleTableTap(table),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF1E293B).withValues(alpha: 0.8),
-                  const Color(0xFF0F172A).withValues(alpha: 0.9),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isAvailable
-                    ? const Color(0xFF64FFDA).withValues(alpha: 0.4)
-                    : Colors.red.withValues(alpha: 0.4),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isAvailable ? const Color(0xFF64FFDA) : Colors.red)
-                      .withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Modern Image Section
-                Expanded(
-                  flex: 3,
-                  child: Stack(
-                    children: [
-                      // Table image with modern styling
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(20)),
-                          image: DecorationImage(
-                            image: NetworkImage(imageUrl),
-                            fit: BoxFit.cover,
-                            onError: (exception, stackTrace) {
-                              // Handle image loading error
-                            },
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: GestureDetector(
+        onTap: () => _handleTableTap(table),
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: const Color(0xFF1E293B),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image Section
+              Expanded(
+                flex: 3,
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16)),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[800],
+                          child: const Center(
+                            child: Icon(Icons.table_restaurant,
+                                color: Colors.white),
                           ),
                         ),
+                      ),
+                    ),
+                    
+                    // Gradient overlay
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16)),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Recommendation badge
+                    if (isRecommended)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: _getRecommendationBadge(
+                            table['recommendationReason']),
+                      ),
+
+                    // Status badge
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isAvailable
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          status,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Favorite button
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _handleTableFavorite(table),
                         child: Container(
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(20)),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.6),
+                            color: Colors.black.withOpacity(0.7),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.favorite_border,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Details Section
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Table name
+                      Text(
+                        table['tableName'] ?? 'Unknown Table',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      // Location and capacity
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            color: Color(0xFF64FFDA),
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              table['location'] ?? 'Main Hall',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF64FFDA)
+                                  .withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${table['capacity'] ?? 2} seats',
+                              style: const TextStyle(
+                                color: Color(0xFF64FFDA),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Rating and Reserve button
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ),
-                      ),
-
-                      // Modern Recommendation badge with proper type
-                      if (isRecommended)
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: _getRecommendationBadge(
-                              table['recommendationReason']),
-                        ),
-
-                      // Modern Status badge
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isAvailable
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFFEF4444),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isAvailable
-                                        ? const Color(0xFF10B981)
-                                        : const Color(0xFFEF4444))
-                                    .withValues(alpha: 0.4),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            status,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Modern Favorite button
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: GestureDetector(
-                          onTap: () => _handleTableFavorite(table),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF64FFDA),
+                                  Color(0xFF4FD1C7)
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'Reserve',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            child: const Icon(
-                              Icons.favorite_border,
-                              color: Colors.white,
-                              size: 16,
+                          ),
+                        ],
+                      ),
+
+                      // Recommendation explanation
+                      if (isRecommended && table['explanation'] != null)
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              table['explanation'],
+                              style: TextStyle(
+                                color: const Color(0xFF64FFDA)
+                                    .withOpacity(0.9),
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
-
-                // Modern Table details
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Table name with modern styling
-                        Text(
-                          table['tableName'] ?? 'Unknown Table',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        // Location and capacity with modern icons
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Icon(
-                                Icons.location_on_outlined,
-                                color: Color(0xFF64FFDA),
-                                size: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                table['location'] ?? 'Main Hall',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: fontSize,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF64FFDA)
-                                    .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${table['capacity'] ?? 2} seats',
-                                style: const TextStyle(
-                                  color: Color(0xFF64FFDA),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        // Rating with modern design
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    rating.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      color: Colors.amber,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
-                            // Reserve button
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF64FFDA),
-                                    Color(0xFF4FD1C7)
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF64FFDA)
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                'Reserve',
-                                style: TextStyle(
-                                  color: Color(0xFF0F172A),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Recommendation explanation (only for recommended tables)
-                        if (isRecommended && table['explanation'] != null)
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF64FFDA)
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: const Color(0xFF64FFDA)
-                                        .withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  table['explanation'],
-                                  style: TextStyle(
-                                    color: const Color(0xFF64FFDA)
-                                        .withValues(alpha: 0.9),
-                                    fontSize: 9,
-                                    fontStyle: FontStyle.italic,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
-}
+} 
+
