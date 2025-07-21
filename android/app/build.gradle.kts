@@ -32,15 +32,23 @@ android {
         multiDexEnabled = true
     }
 
-    dexOptions {
-        javaMaxHeapSize = "4g"
-    }
-
     buildTypes {
+        debug {
+            // Optimize debug builds for memory
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    // Modern way to configure dex options
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
